@@ -244,7 +244,7 @@ var (
 
 // Install determines if action needs to be taken on a item and then
 // calls the appropriate function to install or uninstall
-func Install(item catalog.Item, installerType, urlPackages, cachePath string) string {
+func Install(item catalog.Item, installerType, urlPackages, cachePath string, checkOnly bool) string {
 	// Check the status and determine if any action is needed for this item
 	actionNeeded, err := statusCheckStatus(item, installerType, cachePath)
 	if err != nil {
