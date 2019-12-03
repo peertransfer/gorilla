@@ -267,15 +267,19 @@ func Install(item catalog.Item, installerType, urlPackages, cachePath string, ch
 				for _, BlockingApp := range item.BlockingApps {
 					fmt.Println(BlockingApp)
 				}
-				// Check only mode doesn't perform any action, return
-				return "Check only enabled"
 			}
+			// Check only mode doesn't perform any action, return
+			return "Check only enabled"
 		}
 		// Compile the item's URL
 		itemURL := urlPackages + item.Installer.Location
 		// Run the installer
 		installItemFunc(item, itemURL, cachePath)
 	} else if installerType == "uninstall" {
+		// Check if checkonly mode is enabled
+		if checkOnly {
+			return "Check only enabled"
+		}
 		// Compile the item's URL
 		itemURL := urlPackages + item.Uninstaller.Location
 		// Run the installer
