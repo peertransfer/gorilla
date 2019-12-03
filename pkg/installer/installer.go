@@ -244,7 +244,7 @@ var (
 
 // Install determines if action needs to be taken on a item and then
 // calls the appropriate function to install or uninstall
-func Install(item catalog.Item, installerType, urlPackages, cachePath string) string {
+func Install(item catalog.Item, installerType, urlPackages, cachePath string, checkOnly bool) string {
 	// Check the status and determine if any action is needed for this item
 	actionNeeded, err := statusCheckStatus(item, installerType, cachePath)
 	if err != nil {
@@ -260,11 +260,26 @@ func Install(item catalog.Item, installerType, urlPackages, cachePath string) st
 
 	// Install or uninstall the item
 	if installerType == "install" || installerType == "update" {
+		// Check if checkonly mode is enabled
+		if checkOnly {
+			// Check if the catalog Item has blocking apps
+			if len(item.BlockingApps) != 0 {
+				for _, BlockingApp := range item.BlockingApps {
+					fmt.Println(BlockingApp)
+				}
+			}
+			// Check only mode doesn't perform any action, return
+			return "Check only enabled"
+		}
 		// Compile the item's URL
 		itemURL := urlPackages + item.Installer.Location
 		// Run the installer
 		installItemFunc(item, itemURL, cachePath)
 	} else if installerType == "uninstall" {
+		// Check if checkonly mode is enabled
+		if checkOnly {
+			return "Check only enabled"
+		}
 		// Compile the item's URL
 		itemURL := urlPackages + item.Uninstaller.Location
 		// Run the installer

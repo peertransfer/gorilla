@@ -18,6 +18,7 @@ func TestGet(t *testing.T) {
 		AppDataPath: filepath.Clean("c:/cpe/gorilla/"),
 		Verbose:     true,
 		Debug:       true,
+		CheckOnly:   true,
 		AuthUser:    "johnny",
 		AuthPass:    "pizza",
 		CachePath:   filepath.Clean("c:/cpe/gorilla/cache"),
@@ -48,16 +49,17 @@ func TestParseArguments(t *testing.T) {
 	expectedConfig := `.\fake.yaml`
 	expectedVerbose := true
 	expectedDebug := true
+	expectedCheckOnly := true
 
 	// Save the original arguments
 	origArgs := os.Args
 	defer func() { os.Args = origArgs }()
 
 	// Override with our input
-	os.Args = []string{"gorilla.exe", "--verbose", "--debug", "--config", `.\fake.yaml`}
+	os.Args = []string{"gorilla.exe", "--verbose", "--debug", "--checkonly", "--config", `.\fake.yaml`}
 
 	// Run code
-	configArg, verboseArg, debugArg := parseArguments()
+	configArg, verboseArg, debugArg, checkonlyArg := parseArguments()
 
 	// Compare config
 	if have, want := configArg, expectedConfig; have != want {
@@ -73,6 +75,11 @@ func TestParseArguments(t *testing.T) {
 	if have, want := debugArg, expectedDebug; have != want {
 		t.Errorf("have %v, want %v", have, want)
 	}
+
+	if have, want := checkonlyArg, expectedCheckOnly; have != want {
+		t.Errorf("have %v, want %v", have, want)
+	}
+
 }
 
 // Example tests if help is is parsed properly
@@ -96,7 +103,7 @@ func Example() {
 	os.Args = []string{"gorilla.exe", "--help"}
 
 	// Run code, ignoring the return values
-	_, _, _ = parseArguments()
+	_, _, _, _ = parseArguments()
 
 	// Output:
 	// unknown unknown
@@ -110,6 +117,7 @@ func Example() {
 	// -c, -config         path to configuration file in yaml format
 	// -v, -verbose        enable verbose output
 	// -d, -debug          enable debug output
+	// -C, -checkonly	    displays blocking_apps to install/update
 	// -a, -about          displays the version number and other build info
 	// -V, -version        display the version number
 	// -h, -help           display this help message
