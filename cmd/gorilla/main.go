@@ -22,8 +22,10 @@ func main() {
 	// Get our configuration
 	cfg := config.Get()
 
-	// Confirm we are running as an administrator before continuing
-	adminCheck()
+	// Confirm we are running as an administrator before continuing (Skip check if -CheckOnly enabled)
+	if cfg.CheckOnly != true {
+		adminCheck()
+	}
 
 	// If needed, create the cache directory
 	err := os.MkdirAll(filepath.Clean(cfg.CachePath), 0755)
