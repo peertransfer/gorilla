@@ -23,20 +23,20 @@ var (
 
 // NewLog creates a file and points a new logging instance at it
 func NewLog(cfg config.Configuration) {
+	// Setup a defer function to recover from a panic
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println(r)
+			os.Exit(1)
+		}
+	}()
+
+	// Store the verbosity for later use
+	debug = cfg.Debug
+	verbose = cfg.Verbose
+	checkOnly = cfg.CheckOnly
+
 	if !checkOnly {
-		// Setup a defer function to recover from a panic
-		defer func() {
-			if r := recover(); r != nil {
-				fmt.Println(r)
-				os.Exit(1)
-			}
-		}()
-
-		// Store the verbosity for later use
-		debug = cfg.Debug
-		verbose = cfg.Verbose
-		checkOnly = cfg.CheckOnly
-
 		// Create the log directory
 		logPath := filepath.Join(cfg.AppDataPath, "/gorilla.log")
 		err := os.MkdirAll(filepath.Dir(logPath), 0755)
