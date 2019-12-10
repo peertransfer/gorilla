@@ -17,10 +17,15 @@ import (
 	"github.com/1dustindavis/gorilla/pkg/report"
 )
 
+var (
+	checkOnly bool
+)
+
 func main() {
 
 	// Get our configuration
 	cfg := config.Get()
+	checkOnly = cfg.CheckOnly
 
 	// Confirm we are running as an administrator before continuing
 	adminCheck()
@@ -36,7 +41,9 @@ func main() {
 	gorillalog.NewLog(cfg)
 
 	// Start creating GorillaReport
-	report.Start()
+	if !checkOnly {
+		report.Start()
+	}
 
 	// Set the configuration that `download` will use
 	download.SetConfig(cfg)
@@ -71,8 +78,10 @@ func main() {
 	process.Updates(updates, catalogs, cfg.URLPackages, cfg.CachePath, cfg.CheckOnly)
 
 	// Save GorillaReport to disk
-	gorillalog.Info("Saving GorillaReport.json...")
-	report.End()
+	if !checkOnly {
+		gorillalog.Info("Saving GorillaReport.json...")
+		report.End()
+	}
 
 	// Run CleanUp to delete old cached items and empty directories
 	gorillalog.Info("Cleaning up the cache...")
@@ -103,6 +112,11 @@ func adminCheck() {
 
 	// Convert the output to a lowercase string
 	strOutput := strings.ToLower(string(cmdOutput))
+
+	// Bypass admin check in checkOnly mode
+	if checkOnly {
+		return
+	}
 
 	// If the output contains the word "true", we are running as an administrator
 	if strings.Contains(strOutput, "true") {

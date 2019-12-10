@@ -11,8 +11,9 @@ import (
 
 var (
 	// Define these config variables at the package scope
-	debug   bool
-	verbose bool
+	debug     bool
+	verbose   bool
+	checkOnly bool
 )
 
 // TODO rewrite with io.multiwriter
@@ -22,35 +23,38 @@ var (
 
 // NewLog creates a file and points a new logging instance at it
 func NewLog(cfg config.Configuration) {
-	// Setup a defer function to recover from a panic
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Println(r)
-			os.Exit(1)
+	if !checkOnly {
+		// Setup a defer function to recover from a panic
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Println(r)
+				os.Exit(1)
+			}
+		}()
+
+		// Store the verbosity for later use
+		debug = cfg.Debug
+		verbose = cfg.Verbose
+		checkOnly = cfg.CheckOnly
+
+		// Create the log directory
+		logPath := filepath.Join(cfg.AppDataPath, "/gorilla.log")
+		err := os.MkdirAll(filepath.Dir(logPath), 0755)
+		if err != nil {
+			msg := fmt.Sprint("Unable to create directory:", logPath, err)
+			panic(msg)
 		}
-	}()
 
-	// Store the verbosity for later use
-	debug = cfg.Debug
-	verbose = cfg.Verbose
+		// Create the log file
+		logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			msg := fmt.Sprint("Unable to open file:", logFile, err)
+			panic(msg)
+		}
 
-	// Create the log directory
-	logPath := filepath.Join(cfg.AppDataPath, "/gorilla.log")
-	err := os.MkdirAll(filepath.Dir(logPath), 0755)
-	if err != nil {
-		msg := fmt.Sprint("Unable to create directory:", logPath, err)
-		panic(msg)
+		// Configure the `log` package to use our file
+		log.SetOutput(logFile)
 	}
-
-	// Create the log file
-	logFile, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		msg := fmt.Sprint("Unable to open file:", logFile, err)
-		panic(msg)
-	}
-
-	// Configure the `log` package to use our file
-	log.SetOutput(logFile)
 }
 
 // Debug logs a string as DEBUG
@@ -70,7 +74,9 @@ func Info(logStrings ...interface{}) {
 	if verbose {
 		fmt.Println(logStrings...)
 	}
-	log.Println(logStrings...)
+	if !checkOnly {
+		log.Println(logStrings...)
+	}
 }
 
 // Warn logs a string as WARN
